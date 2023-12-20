@@ -1,94 +1,66 @@
-import random
+#!/usr/bin/python3
+import time
 import math
+import sys
 
-#select 2 large prime numbers
-def generate_p_and_q():
+def pollard_rho(n):
+    if n % 2 == 0:
+        return 2
+    
+    x = 2
+    y = 2
+    d = 1 
+    # Define the function f(x) using a lambda function
+    f = lambda x: (x**2 + 1) % n
+    # Loop until a non-trivial factor is found
+    while d == 1:
+        # Generate new values for x using the function f(x)
+        x = f(x)
 	
-	#Calculating 1 to 100 prime numbers 
+        # Generate new values for y using the function f(f(y))
+        y = f(f(y))
+        # Calculate the greatest common divisor between |x - y| and n
+        d = math.gcd(abs(x - y), n)
+    # Return the non-trivial factor
+    return d
 
-	numbs = [i for i in range(2,101)]
+def main():
+    # Check if the correct number of command-line arguments is provided
+    if len(sys.argv) != 2:
+        # Print the correct usage of the program
+        print("Usage: python factorize.py <file>")
+        # Exit the program if the correct arguments are not provided
+        return
+    # Get the file path from the command-line argument
+    file_path = sys.argv[1]
+    # start timing
+    start_time = time.time()
+    try:
+        # Open the file in read mode
+        with open(file_path, 'r') as file:
+	# Read all lines of the file into a lis
+            numbers = file.readlines()
+        # Iterate through each number in the list
+        for number in numbers:
+	# Convert the string number to an integer
+            num = int(number.strip())
+	# Factorize the number using Pollard's rho algorithm
+            factor = pollard_rho(num)
+            # If the factor is equal to the original number
+            if factor == num:
+                # Print that the number is prime
+                print(f"{num} is prime.")
+            else:
+	    # Print the factors of the number
+                print(f"{num}={factor}*{num // factor}")
 
-	for n in range(2,101):
-		for i in range(2,math.ceil(n/2)+1):
-			if n % i == 0:
-				numbs.remove(n)
-				break
-			else:
-				continue
+	if time.time() - start_time > 5:
+                print("Time limit exceeded")
+                exit()
 
-	#Selecting any 2 prime numbers randomly
+    # Print an error message if the file is not found
+    except FileNotFoundError:
+        print(f"File '{file_path}' not found.")
 
-	p = random.choice(numbs)
-	numbs.remove(p)
-	q = random.choice(numbs)
-
-	return p, q
-
-p,q =  generate_p_and_q()
-
-print(f'[+] p = {p} and q = {q}')
-
-n = p * q
-
-phi = (p - 1) * (q - 1)
-
-
-print(f'[+] n = {n} and euler totient = {phi}')
-
-
-#Calculating e -> gcd(e,phi) = 1 and 1 < e <phi.
-def generate_e(phi):
-	possible_e_values = []
-
-	for i in range(2,phi):
-		if math.gcd(i,phi) == 1: 
-			e=i
-			possible_e_values.append(e)
-
-	# print(possible_e_values)
-
-	return random.choice(possible_e_values)
-
-e = generate_e(phi)
-
-print(f'[+] e = {e}')
-
-def generate_d(e,phi):
-
-	# d_list = [] 
-
-	for i in range(2,phi):
-
-		if (i*e) % phi == 1: #  ed mod(phi) = 1
-			d = i # As every unique public key have only one unique private key.
-			# d_list.append(d)
-			break
-
-	# print(d_list)
-	return d
-
-d = generate_d(e,phi)
-
-print(f'[+] d = {d}')
-
-# Message should be less than n (msg < n)
-
-msg = random.randint(1,n)
-
-print(f'[+] msg : {msg}')
-
-def encrypt(msg,e,n): #(msg^e) mod n
-	c = pow(msg,e,n)
-	return c
-
-e_msg = encrypt(msg,e,n)
-
-print(f'[+] Encrypted msg : {e_msg}')
-
-def decrypt(msg,d,n): #(msg^d) mod n
-	p = pow(msg,d,n)
-	return p
-
-d_msg = decrypt(e_msg,d,n)
-
-print(f'[+] Decrypted msg : {d_msg}')
+if __name__ == '__main__':
+    main()  # Call the main function when the script is executed
